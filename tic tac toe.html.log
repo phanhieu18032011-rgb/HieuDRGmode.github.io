@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tic Tac Toe — Giao diện đẹp</title>
+  <style>
+    :root{
+      --bg:#0f1724; /* dark */
+      --card:#0b1220;
+      --accent1:linear-gradient(135deg,#7c3aed,#06b6d4);
+      --glass: rgba(255,255,255,0.03);
+      --win: rgba(34,197,94,0.12);
+      --lose: rgba(239,68,68,0.08);
+      --glass-2: rgba(255,255,255,0.02);
+      --muted: #9aa4b2;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,58,237,0.12), transparent),
+                  radial-gradient(900px 400px at 90% 90%, rgba(6,182,212,0.08), transparent),
+                  var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: #e6eef8;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+    }
+    .container{
+      width:min(920px, 96vw);
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap:24px;
+      align-items:start;\    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent), var(--card);
+      border-radius:18px;
+      padding:18px;
+      box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .left{padding:28px; display:flex; flex-direction:column; gap:18px}
+    h1{margin:0;font-size:20px;letter-spacing:0.2px}
+    .subtitle{color:var(--muted); font-size:13px}
+
+    /* board */
+    .board-wrap{display:flex;flex-direction:column;gap:12px;align-items:center}
+    .board{
+      display:grid;
+      grid-template-columns:repeat(3, 90px);
+      grid-template-rows:repeat(3, 90px);
+      gap:12px;
+      padding:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+      border-radius:16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    @media (max-width:780px){
+      .container{grid-template-columns:1fr;}
+      .board{grid-template-columns:repeat(3, min(22vw,80px));grid-template-rows:repeat(3, min(22vw,80px));}
+    }
+    .cell{
+      background:var(--glass);
+      display:flex;align-items:center;justify-content:center;
+      font-size:42px;font-weight:700;color:#e6eef8;border-radius:10px;cursor:pointer;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+      user-select:none;
+    }
+    .cell:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    .cell.disabled{cursor:not-allowed;opacity:.9;transform:none}
+    .cell.x{color:#7c3aed;text-shadow:0 6px 18px rgba(124,58,237,0.08)}
+    .cell.o{color:#06b6d4;text-shadow:0 6px 18px rgba(6,182,212,0.06)}
+
+    /* controls */
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{background:var(--glass-2);border:1px solid rgba(255,255,255,0.03);padding:10px 14px;border-radius:12px;cursor:pointer}
+    .btn.primary{background:var(--accent1);background-clip:padding-box;color:#071024;font-weight:700;border:none}
+
+    /* right panel */
+    .right{padding:22px;display:flex;flex-direction:column;gap:12px}
+    .stat{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,0.01), transparent)}
+    .turn{display:flex;gap:10px;align-items:center}
+    .dot{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,#7c3aed,#06b6d4)}
+
+    .scores{display:flex;gap:12px}
+    .score-card{flex:1;padding:12px;border-radius:12px;text-align:center}
+    .small{font-size:12px;color:var(--muted)}
+
+    .message{padding:10px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,0.01), transparent);text-align:center}
+
+    /* highlight win */\    .win{background:linear-gradient(90deg,#bbf7d0,#bbf7d0);color:#064e3b}
+    .line-overlay{position:relative}
+    .highlight{position:absolute;inset:0;border-radius:10px;box-shadow:0 0 0 3px rgba(124,58,237,0.06);pointer-events:none}
+
+    footer{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+
+    /* modal */\    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);backdrop-filter: blur(4px);opacity:0;pointer-events:none;transition:opacity .15s ease}
+    .modal.show{opacity:1;pointer-events:auto}
+    .modal-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:18px;border-radius:12px;width:min(420px,92vw);text-align:center}
+    .modal h2{margin:6px 0 0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card left">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <h1>Tic Tac Toe</h1>
+          <div class="subtitle">Chơi nhanh — giao diện đẹp, tương thích mobile</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Mode</div>
+          <select id="mode" class="btn" style="padding:8px 10px">
+            <option value="pvp">Human vs Human</option>
+            <option value="cpu">Human vs CPU (Easy)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" aria-label="Bàn chơi" role="grid"></div>
+
+        <div style="display:flex;gap:12px;align-items:center">
+          <div class="message" id="turnMsg">Lượt của: <strong id="turnPlayer">X</strong></div>
+          <div class="controls">
+            <button class="btn" id="undo" title="Undo" disabled>Undo</button>
+            <button class="btn" id="restart">Restart</button>
+            <button class="btn primary" id="newGame">New Game</button>
+          </div>
+        </div>
+      </div>
+
+      <footer>Nhấn vào ô để đánh. Hỗ trợ trên điện thoại và máy tính.</footer>
+    </div>
+
+    <div class="card right">
+      <div class="stat">
+        <div>
+          <div class="small">Trạng thái</div>
+          <div style="font-weight:700;margin-top:6px" id="status">Đang chơi</div>
+        </div>
+        <div class="turn">
+          <div class="small">Lượt</div>
+          <div class="dot" id="dot"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:12px">
+        <div class="score-card">
+          <div class="small">X</div>
+          <div style="font-size:24px;font-weight:800" id="scoreX">0</div>
+        </div>
+        <div class="score-card">
+          <div class="small">Hòa</div>
+          <div style="font-size:24px;font-weight:800" id="scoreT">0</div>
+        </div>
+        <div class="score-card">
+          <div class="small">O</div>
+          <div style="font-size:24px;font-weight:800" id="scoreO">0</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">Lịch sử (số lượt)</div>
+        <div id="history" style="margin-top:10px;color:var(--muted);font-size:13px">—</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">Mẹo</div>
+        <div style="margin-top:6px;color:var(--muted);font-size:13px">Chiếm giữa hoặc góc để có lợi thế. Nếu muốn AI khó hơn, yêu cầu Minimax.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div id="modalText"><h2>Trò chơi kết thúc</h2></div>
+      <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
+        <button class="btn" id="modalClose">Tiếp tục</button>
+        <button class="btn primary" id="modalRestart">Chơi lại</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Game data ---
+    const boardEl = document.getElementById('board')
+    const turnPlayerEl = document.getElementById('turnPlayer')
+    const statusEl = document.getElementById('status')
+    const dotEl = document.getElementById('dot')
+    const scoreXEl = document.getElementById('scoreX')
+    const scoreOEl = document.getElementById('scoreO')
+    const scoreTEl = document.getElementById('scoreT')
+    const historyEl = document.getElementById('history')
+    const modal = document.getElementById('modal')
+    const modalText = document.getElementById('modalText')
+    const modalClose = document.getElementById('modalClose')
+    const modalRestart = document.getElementById('modalRestart')
+    const undoBtn = document.getElementById('undo')
+    const restartBtn = document.getElementById('restart')
+    const newGameBtn = document.getElementById('newGame')
+    const modeSelect = document.getElementById('mode')
+
+    let board = Array(9).fill(null) // null | 'X' | 'O'
+    let current = 'X'
+    let playing = true
+    let history = []
+    let scores = {X:0,O:0,T:0}
+
+    const WIN_LINES = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ]
+
+    function renderBoard(){
+      boardEl.innerHTML = ''
+      board.forEach((v,i)=>{
+        const cell = document.createElement('div')
+        cell.className = 'cell' + (v? ' '+v.toLowerCase() : '') + (playing && !v? '' : ' disabled')
+        cell.setAttribute('data-i', i)
+        cell.setAttribute('role','button')
+        cell.setAttribute('aria-label','Ô ' + (i+1))
+        cell.tabIndex = 0
+        cell.innerHTML = v? v : ''
+        cell.addEventListener('click', onCellClick)
+        cell.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key===' ') onCellClick(e) })
+        boardEl.appendChild(cell)
+      })
+    }
+
+    function onCellClick(e){
+      const i = Number(e.currentTarget.dataset.i)
+      if(!playing || board[i]) return
+      makeMove(i)
+    }
+
+    function makeMove(i){
+      board[i] = current
+      history.push(i)
+      undoBtn.disabled = false
+      renderBoard()
+      checkState()
+      if(playing) switchTurn()
+      updateUI()
+
+      // CPU move (easy) if mode CPU and still playing and current is O
+      if(modeSelect.value === 'cpu' && playing && current === 'O'){
+        setTimeout(cpuMove, 240)
+      }
+    }
+
+    function switchTurn(){
+      current = current === 'X' ? 'O' : 'X'
+    }
+
+    function cpuMove(){
+      // Easy: random available
+      const available = board.map((v,i)=>v===null?i:null).filter(v=>v!==null)
+      if(available.length === 0) return
+      const choice = available[Math.floor(Math.random()*available.length)]
+      makeMove(choice)
+    }
+
+    function checkState(){
+      const winner = getWinner(board)
+      if(winner){
+        playing = false
+        scores[winner]++
+        highlightWin(winner)
+        showModal(`<h2>${winner} thắng!</h2><p>Chiến thắng theo hàng số</p>`)
+        statusEl.textContent = `${winner} thắng`
+        updateScores()
+        return
+      }
+      if(board.every(Boolean)){
+        playing = false
+        scores.T++
+        statusEl.textContent = 'Hòa'
+        updateScores()
+        showModal(`<h2>Hòa!</h2><p>Không còn nước đi nào.</p>`)
+      }
+    }
+
+    function getWinner(b){
+      for(const line of WIN_LINES){
+        const [a,c,d] = line
+        if(b[line[0]] && b[line[0]] === b[line[1]] && b[line[1]] === b[line[2]]) return b[line[0]]
+      }
+      return null
+    }
+
+    function highlightWin(winner){
+      // find winning line
+      for(const line of WIN_LINES){
+        if(board[line[0]] === winner && board[line[1]] === winner && board[line[2]] === winner){
+          const cells = Array.from(boardEl.children)
+          line.forEach(idx => cells[idx].classList.add('win'))
+          break
+        }
+      }
+    }
+
+    function showModal(html){
+      modalText.innerHTML = html
+      modal.classList.add('show')
+    }
+    function closeModal(){ modal.classList.remove('show') }
+
+    // controls
+    undoBtn.addEventListener('click', ()=>{
+      if(history.length === 0) return
+      const last = history.pop()
+      board[last] = null
+      // if CPU mode and last was CPU's move, undo twice to go back to player's turn
+      if(modeSelect.value === 'cpu' && history.length && current === 'X'){
+        // try to revert the previous two moves if exists
+        const prev = history.pop()
+        if(prev !== undefined) board[prev] = null
+      }
+      playing = true
+      current = 'X'
+      updateUI(); renderBoard(); undoBtn.disabled = history.length===0
+      statusEl.textContent = 'Đang chơi'
+    })
+
+    restartBtn.addEventListener('click', ()=>{
+      resetBoard()
+    })
+    newGameBtn.addEventListener('click', ()=>{
+      scores = {X:0,O:0,T:0}
+      resetBoard()
+      updateScores()
+    })
+
+    modalClose.addEventListener('click', ()=>{ closeModal() })
+    modalRestart.addEventListener('click', ()=>{ closeModal(); resetBoard() })
+
+    modeSelect.addEventListener('change', ()=>{ resetBoard() })
+
+    function resetBoard(){
+      board = Array(9).fill(null); history = []; playing = true; current = 'X'
+      statusEl.textContent = 'Đang chơi'
+      renderBoard(); updateUI(); undoBtn.disabled = true
+    }
+
+    function updateUI(){
+      turnPlayerEl.textContent = current
+      dotEl.style.background = current === 'X' ? 'linear-gradient(135deg,#7c3aed,#b794f4)' : 'linear-gradient(135deg,#06b6d4,#67e8f9)'
+      scoreXEl.textContent = scores.X
+      scoreOEl.textContent = scores.O
+      scoreTEl.textContent = scores.T
+      historyEl.textContent = history.length? history.join(', ') : '—'
+      // accessibility
+      boardEl.querySelectorAll('.cell').forEach((c,i)=>{
+        c.classList.toggle('disabled', !playing || !!board[i])
+      })
+    }
+
+    // initial render
+    renderBoard(); updateUI()
+
+    // keyboard shortcuts
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'r') resetBoard()
+      if(e.key === 'n') { scores={X:0,O:0,T:0}; resetBoard(); updateScores() }
+    })
+
+    function updateScores(){ scoreXEl.textContent = scores.X; scoreOEl.textContent = scores.O; scoreTEl.textContent = scores.T }
+
+    // close modal when clicking outside
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal() })
+
+    // small enhancement: disable text selection on double-click
+    boardEl.addEventListener('mousedown', (e)=>{ e.preventDefault() })
+
+  </script>
+</body>
+</html>
